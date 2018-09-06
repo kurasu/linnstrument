@@ -100,30 +100,25 @@ public class LinnStrumentExtension extends ControllerExtension
 
     private void onTimer()
     {
-        int row = mCount%7;
-        int column = mCount % 25;
         int color = 1 + (mCount % 10);
+        int row = (mCount % 8);
 
-        for(int c=1; c<=25; c++)
+        for (int y = 0; y < 8; y++)
         {
-            for (int r = 0; r < 8; r++)
+            mDisplay.setColor(0, y, y == row ? color : 0);
+        }
+
+        for(int x=1; x<=25; x++)
+        {
+            for (int y = 0; y < 8; y++)
             {
-                setLED(r, c, color);
+                mDisplay.setColor(x,y, color);
             }
         }
 
         mCount++;
 
         getHost().scheduleTask(this::onTimer, 500);
-    }
-
-    void setLED(int row, int column, int color)
-    {
-        final MidiOut midiOut = getMidiOutPort(0);
-
-        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 20, column);
-        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 21, row);
-        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 22, color);
     }
 
     void sendRPN(int channel, int rpn, int value)
@@ -176,14 +171,17 @@ public class LinnStrumentExtension extends ControllerExtension
     @Override
     public void exit()
     {
+        setUserFirmwareMode(false);
     }
 
     @Override
     public void flush()
     {
+        mDisplay.flush(getMidiOutPort(0));
     }
 
     private boolean mShouldSendInit = false;
     private boolean mDidRunInitTask = false;
     private int mPitchBendRange = 24;
+    private Display mDisplay = new Display();
 }
