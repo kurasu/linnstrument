@@ -1,15 +1,16 @@
 package com.rogerlinndesign;
-import java.util.UUID;
 
 import com.bitwig.extension.api.PlatformType;
 import com.bitwig.extension.controller.AutoDetectionMidiPortNamesList;
 import com.bitwig.extension.controller.ControllerExtensionDefinition;
 import com.bitwig.extension.controller.api.ControllerHost;
 
+import java.util.UUID;
+
 public class LinnStrumentExtensionDefinition extends ControllerExtensionDefinition
 {
    private static final UUID DRIVER_ID = UUID.fromString("d535bbf0-9359-43fd-a3b1-c9831777f894");
-   
+
    public LinnStrumentExtensionDefinition()
    {
    }
@@ -19,7 +20,7 @@ public class LinnStrumentExtensionDefinition extends ControllerExtensionDefiniti
    {
       return "LinnStrument";
    }
-   
+
    @Override
    public String getAuthor()
    {
@@ -37,13 +38,13 @@ public class LinnStrumentExtensionDefinition extends ControllerExtensionDefiniti
    {
       return DRIVER_ID;
    }
-   
+
    @Override
    public String getHardwareVendor()
    {
       return "Roger Linn Design";
    }
-   
+
    @Override
    public String getHardwareModel()
    {
