@@ -3,8 +3,16 @@ package com.rogerlinndesign;
 import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.controller.api.MidiOut;
 
+import java.util.Arrays;
+
 public class Display
 {
+    public Display()
+    {
+        Arrays.fill(mTargetData, Color.BLACK.get());
+        Arrays.fill(mHardwareData, (byte) -1);
+    }
+
     void setColor(int x, int y, int color)
     {
         mTargetData[getIndex(x, y)] = (byte) color;
@@ -28,13 +36,15 @@ public class Display
 
                 if (mTargetData[i] != mHardwareData[i])
                 {
-                    if (x != lastSentX) {
+                    if (x != lastSentX)
+                    {
                         midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 20, x);
                         lastSentX = x;
                     }
 
-                    if (y != lastSentY) {
-                        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 21, y);
+                    if (y != lastSentY)
+                    {
+                        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 21, 7-y); // flip y
                     }
 
                     int color = mTargetData[i];

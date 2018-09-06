@@ -1,9 +1,11 @@
 package com.rogerlinndesign;
 
-import com.bitwig.extension.api.util.midi.ShortMidiMessage;
-import com.bitwig.extension.callback.ShortMidiMessageReceivedCallback;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.ControllerExtension;
+import com.rogerlinndesign.modes.MixerMode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LinnStrumentExtension extends ControllerExtension
 {
@@ -23,52 +25,32 @@ public class LinnStrumentExtension extends ControllerExtension
         noteInput.setShouldConsumeEvents(false);
         noteInput.setUseExpressiveMidi(true, 0, 24);
 
+        mModes = new ArrayList<>();
+        mModes.add(new MixerMode());
 
-      /*final String[] yesNo = {"Yes", "No"};
-      final SettableEnumValue shouldSendInit =
-              host.getPreferences().getEnumSetting("Send initialization messages", "MPE", yesNo, "Yes");
+        selectMode(mModes.get(0));
 
-      shouldSendInit.addValueObserver(newValue ->
-      {
-         mShouldSendInit = newValue.equalsIgnoreCase("Yes");
-
-         if (mShouldSendInit && mDidRunInitTask)
-         {
-            sendInitializationMessages();
-            sendPitchbendRange(mPitchBendRange);
-         }
-      });
-
-      final SettableRangedValue bendRange =
-              host.getPreferences().getNumberSetting("Pitch Bend Range", "MPE", 1, 96, 1, "", 24);
-
-      bendRange.addRawValueObserver(range ->
-      {
-         mPitchBendRange = (int)range;
-         noteInput.setUseExpressiveMidi(true, 0, mPitchBendRange);
-
-         if (mShouldSendInit && mDidRunInitTask)
-         {
-            sendPitchbendRange(mPitchBendRange);
-         }
-      });
-
-      host.scheduleTask(() ->
-      {
-         mDidRunInitTask = true;
-
-         if (mShouldSendInit)
-         {
-            sendInitializationMessages();
-         }
-      }, 2000);*/
-
-        host.scheduleTask(this::sendInitializationMessages, 100);
-
-        host.scheduleTask(this::onTimer, 200);
+        host.scheduleTask(this::initPhase1, 100);
     }
 
-    void sendInitializationMessages()
+    private void selectMode(Mode mode)
+    {
+        if (mode == mCurrentMode) return;
+
+        if (mCurrentMode != null)
+        {
+            mCurrentMode.deselected();
+        }
+
+        mCurrentMode = mode;
+
+        if (mode != null)
+        {
+            mode.selected();
+        }
+    }
+
+    void initPhase1()
     {
         final MidiOut midiOut = getHost().getMidiOutPort(0);
 
@@ -84,6 +66,24 @@ public class LinnStrumentExtension extends ControllerExtension
         midiOut.sendMidi(0xBF, 6, 0);
 
         setUserFirmwareMode(true);
+
+        drawBitwigLogo();
+
+        getHost().scheduleTask(this::onTimer, 2000);
+    }
+
+    private void drawBitwigLogo()
+    {
+        final Color c = Color.ORANGE;
+        final Display d = this.mDisplay;
+
+        for(int x=10;x<=13; x++) d.setColor(x, 2, c);
+        for(int x=9;x<=14; x++) d.setColor(x, 3, c);
+
+        d.setColor(9, 4, c);
+        d.setColor(10, 4, c);
+        d.setColor(13, 4, c);
+        d.setColor(14, 4, c);
     }
 
     private void onMidi(int status, int data1, int data2)
@@ -136,6 +136,8 @@ public class LinnStrumentExtension extends ControllerExtension
         midiOut.sendMidi(status, 100, rpnLSB);
         midiOut.sendMidi(status, 6, valueMSB);
         midiOut.sendMidi(status, 38, valueLSB);
+        midiOut.sendMidi(status, 101, 127);
+        midiOut.sendMidi(status, 100, 127);
     }
 
     void sendNRPN(int channel, int nrpn, int value)
@@ -157,26 +159,20 @@ public class LinnStrumentExtension extends ControllerExtension
         midiOut.sendMidi(status, 100, 127);
     }
 
-    void sendPitchbendRange(int range)
-    {
-        final MidiOut midiOut = getHost().getMidiOutPort(0);
-
-        // Set up Pitch bend range
-        midiOut.sendMidi(0xB0, 101, 0); // Registered Parameter Number (RPN) - MSB*
-        midiOut.sendMidi(0xB0, 100, 0); // Registered Parameter Number (RPN) - LSB*
-        midiOut.sendMidi(0xB0, 6, range);
-        midiOut.sendMidi(0xB0, 38, 0);
-    }
-
     @Override
     public void exit()
     {
-        setUserFirmwareMode(false);
+        //setUserFirmwareMode(false);
     }
 
     @Override
     public void flush()
     {
+        if (mCurrentMode != null)
+        {
+            mCurrentMode.paint(mDisplay);
+        }
+
         mDisplay.flush(getMidiOutPort(0));
     }
 
@@ -184,4 +180,6 @@ public class LinnStrumentExtension extends ControllerExtension
     private boolean mDidRunInitTask = false;
     private int mPitchBendRange = 24;
     private Display mDisplay = new Display();
+    private List<Mode> mModes;
+    private Mode mCurrentMode;
 }
