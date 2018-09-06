@@ -3,6 +3,7 @@ package com.rogerlinndesign;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.rogerlinndesign.modes.MixerMode;
+import com.rogerlinndesign.modes.PaintMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +28,7 @@ public class LinnStrumentExtension extends ControllerExtension
 
         mModes = new ArrayList<>();
         mModes.add(new MixerMode());
-
-        selectMode(mModes.get(0));
+        mModes.add(new PaintMode());
 
         host.scheduleTask(this::initPhase1, 100);
     }
@@ -54,22 +54,24 @@ public class LinnStrumentExtension extends ControllerExtension
     {
         final MidiOut midiOut = getHost().getMidiOutPort(0);
 
+        /*
         // Set up MPE mode: Zone 1 15 channels
-        midiOut.sendMidi(0xB0, 101, 0); // Registered Parameter Number (RPN) - MSB*
-        midiOut.sendMidi(0xB0, 100, 6); // Registered Parameter Number (RPN) - LSB*
-        midiOut.sendMidi(0xB0, 6, 15);
-        midiOut.sendMidi(0xB0, 38, 0);
+        sendRPN(0, 6, 15<<7);
 
         // Set up MPE mode: Zone 2 off
-        midiOut.sendMidi(0xBF, 101, 0);
-        midiOut.sendMidi(0xBF, 100, 6);
-        midiOut.sendMidi(0xBF, 6, 0);
+        sendRPN(15, 6, 0);
+        */
 
         setUserFirmwareMode(true);
 
         drawBitwigLogo();
 
-        getHost().scheduleTask(this::onTimer, 2000);
+        getHost().scheduleTask(() ->
+        {
+            selectMode(mModes.get(1));
+        }, 2000);
+
+        //getHost().scheduleTask(this::onTimer, 2000);
     }
 
     private void drawBitwigLogo()
@@ -77,18 +79,29 @@ public class LinnStrumentExtension extends ControllerExtension
         final Color c = Color.ORANGE;
         final Display d = this.mDisplay;
 
-        for(int x=10;x<=13; x++) d.setColor(x, 2, c);
-        for(int x=9;x<=14; x++) d.setColor(x, 3, c);
+        for(int x=11;x<=14; x++) d.setColor(x, 2, c);
+        for(int x=10;x<=15; x++) d.setColor(x, 3, c);
 
-        d.setColor(9, 4, c);
         d.setColor(10, 4, c);
-        d.setColor(13, 4, c);
+        d.setColor(11, 4, c);
         d.setColor(14, 4, c);
+        d.setColor(15, 4, c);
     }
 
     private void onMidi(int status, int data1, int data2)
     {
         getHost().println(Integer.toHexString(status << 16 | data1 << 8 | data2) + " (" + data1 + "," + data2 + ")");
+
+        int y = status & 0xf;
+        int x = data1;
+
+        if (data2 > 0)
+        {
+            if (mCurrentMode != null)
+            {
+                mCurrentMode.onTap(x - 1, 7-y);
+            }
+        }
     }
 
     private void setUserFirmwareMode(boolean b)
@@ -105,10 +118,10 @@ public class LinnStrumentExtension extends ControllerExtension
 
         for (int y = 0; y < 8; y++)
         {
-            mDisplay.setColor(0, y, y == row ? color : 0);
+            mDisplay.setColor(-1, y, y == row ? color : 0);
         }
 
-        for(int x=1; x<=25; x++)
+        for(int x=0; x<25; x++)
         {
             for (int y = 0; y < 8; y++)
             {
@@ -162,7 +175,7 @@ public class LinnStrumentExtension extends ControllerExtension
     @Override
     public void exit()
     {
-        //setUserFirmwareMode(false);
+        setUserFirmwareMode(false);
     }
 
     @Override

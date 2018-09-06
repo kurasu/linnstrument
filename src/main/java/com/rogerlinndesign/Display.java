@@ -13,14 +13,14 @@ public class Display
         Arrays.fill(mHardwareData, (byte) -1);
     }
 
-    void setColor(int x, int y, int color)
+    public void setColor(int x, int y, int color)
     {
-        mTargetData[getIndex(x, y)] = (byte) color;
+        mTargetData[getIndex(x+1, y)] = (byte) color;
     }
 
-    void setColor(int x, int y, Color color)
+    public void setColor(int x, int y, Color color)
     {
-        mTargetData[getIndex(x, y)] = color.get();
+        mTargetData[getIndex(x+1, y)] = color.get();
     }
 
     void flush(final MidiOut midiOut)

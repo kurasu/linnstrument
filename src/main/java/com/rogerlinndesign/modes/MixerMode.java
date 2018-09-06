@@ -3,20 +3,20 @@ package com.rogerlinndesign.modes;
 import com.rogerlinndesign.Display;
 import com.rogerlinndesign.Mode;
 
-public class MixerMode extends Mode
+public class MixerMode implements Mode
 {
     @Override
-    protected void selected()
+    public void selected()
     {
     }
 
     @Override
-    protected void deselected()
+    public void deselected()
     {
     }
 
     @Override
-    protected void onTap(final int x, final int y)
+    public void onTap(final int x, final int y)
     {
 
     }

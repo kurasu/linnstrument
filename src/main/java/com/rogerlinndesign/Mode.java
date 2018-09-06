@@ -1,21 +1,12 @@
 package com.rogerlinndesign;
 
-public class Mode
+public interface Mode
 {
-    protected void selected()
-    {
-    }
+    void selected();
 
-    protected void deselected()
-    {
-    }
+    void deselected();
 
-    protected void onTap(final int x, final int y)
-    {
+    void onTap(final int x, final int y);
 
-    }
-
-    public void paint(final Display display)
-    {
-    }
+    void paint(final Display display);
 }
