@@ -31,6 +31,11 @@ public class LinnStrumentExtension extends ControllerExtension
         mModes.add(new PaintMode());
 
         host.scheduleTask(this::initPhase1, 100);
+
+        for (Mode mode : mModes)
+        {
+            mode.init(host);
+        }
     }
 
     private void selectMode(Mode mode)
@@ -39,14 +44,14 @@ public class LinnStrumentExtension extends ControllerExtension
 
         if (mCurrentMode != null)
         {
-            mCurrentMode.deselected();
+            mCurrentMode.hide();
         }
 
         mCurrentMode = mode;
 
         if (mode != null)
         {
-            mode.selected();
+            mode.show();
         }
     }
 
@@ -79,8 +84,8 @@ public class LinnStrumentExtension extends ControllerExtension
         final Color c = Color.ORANGE;
         final Display d = this.mDisplay;
 
-        for(int x=11;x<=14; x++) d.setColor(x, 2, c);
-        for(int x=10;x<=15; x++) d.setColor(x, 3, c);
+        for (int x = 11; x <= 14; x++) d.setColor(x, 2, c);
+        for (int x = 10; x <= 15; x++) d.setColor(x, 3, c);
 
         d.setColor(10, 4, c);
         d.setColor(11, 4, c);
@@ -99,7 +104,7 @@ public class LinnStrumentExtension extends ControllerExtension
         {
             if (mCurrentMode != null)
             {
-                mCurrentMode.onTap(x - 1, 7-y);
+                mCurrentMode.onTap(x - 1, 7 - y, data2);
             }
         }
     }
@@ -121,11 +126,11 @@ public class LinnStrumentExtension extends ControllerExtension
             mDisplay.setColor(-1, y, y == row ? color : 0);
         }
 
-        for(int x=0; x<25; x++)
+        for (int x = 0; x < 25; x++)
         {
             for (int y = 0; y < 8; y++)
             {
-                mDisplay.setColor(x,y, color);
+                mDisplay.setColor(x, y, color);
             }
         }
 
@@ -175,6 +180,11 @@ public class LinnStrumentExtension extends ControllerExtension
     @Override
     public void exit()
     {
+        for (Mode mode : mModes)
+        {
+            mode.exit();
+        }
+
         setUserFirmwareMode(false);
     }
 

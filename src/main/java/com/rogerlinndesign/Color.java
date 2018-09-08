@@ -15,12 +15,12 @@ public enum Color
     LIME,
     PINK;
 
-    byte get()
+    public byte get()
     {
         return (byte) this.ordinal();
     }
 
-    Color fromRGB1Bit(final int rgb)
+    public Color fromRGB1Bit(final int rgb)
     {
         switch (rgb)
         {

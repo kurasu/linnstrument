@@ -1,12 +1,30 @@
 package com.rogerlinndesign;
 
+import com.bitwig.extension.controller.api.ControllerHost;
+
 public interface Mode
 {
-    void selected();
+    /**
+     * called by extension init
+     **/
+    void init(ControllerHost host);
 
-    void deselected();
+    /**
+     * called by extension exit
+     **/
+    void exit();
 
-    void onTap(final int x, final int y);
+    /**
+     * called when mode becomes active
+     **/
+    void show();
+
+    /**
+     * called when mode was active but another ones gets selected
+     **/
+    void hide();
+
+    void onTap(final int x, final int y, int velocity);
 
     void paint(final Display display);
 }

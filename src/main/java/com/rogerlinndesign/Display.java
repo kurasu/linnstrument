@@ -15,12 +15,12 @@ public class Display
 
     public void setColor(int x, int y, int color)
     {
-        mTargetData[getIndex(x+1, y)] = (byte) color;
+        mTargetData[getIndex(x + 1, y)] = (byte) color;
     }
 
     public void setColor(int x, int y, Color color)
     {
-        mTargetData[getIndex(x+1, y)] = color.get();
+        mTargetData[getIndex(x + 1, y)] = color.get();
     }
 
     void flush(final MidiOut midiOut)
@@ -28,7 +28,7 @@ public class Display
         int lastSentY = -1;
         int lastSentX = -1;
 
-        for(int x=0; x<=25; x++)
+        for (int x = 0; x <= 25; x++)
         {
             for (int y = 0; y < 8; y++)
             {
@@ -44,7 +44,7 @@ public class Display
 
                     if (y != lastSentY)
                     {
-                        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 21, 7-y); // flip y
+                        midiOut.sendMidi(ShortMidiMessage.CONTROL_CHANGE, 21, 7 - y); // flip y
                     }
 
                     int color = mTargetData[i];
@@ -73,7 +73,7 @@ public class Display
 
     private int getIndex(final int x, final int y)
     {
-        return x + y*getWidth();
+        return x + y * getWidth();
     }
 
     private byte[] mTargetData = new byte[getSize()];
