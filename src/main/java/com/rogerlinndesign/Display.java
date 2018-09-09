@@ -56,6 +56,18 @@ public class Display
         }
     }
 
+    public void clear()
+    {
+        for (int x = 1; x <= 25; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                final int i = getIndex(x, y);
+                mTargetData[i] = Color.BLACK.get();
+            }
+        }
+    }
+
     public int getWidth()
     {
         return 26;

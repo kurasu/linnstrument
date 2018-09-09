@@ -1,7 +1,10 @@
 package com.rogerlinndesign;
 
+import com.bitwig.extension.api.util.midi.ShortMidiMessage;
 import com.bitwig.extension.controller.api.*;
 import com.bitwig.extension.controller.ControllerExtension;
+import com.rogerlinndesign.modes.ClipMode;
+import com.rogerlinndesign.modes.DrumSequencerMode;
 import com.rogerlinndesign.modes.MixerMode;
 import com.rogerlinndesign.modes.PaintMode;
 
@@ -21,14 +24,16 @@ public class LinnStrumentExtension extends ControllerExtension
         final ControllerHost host = getHost();
 
         final MidiIn midiIn = host.getMidiInPort(0);
-        final NoteInput noteInput = midiIn.createNoteInput("", "??????");
+        //final NoteInput noteInput = midiIn.createNoteInput("", "??????");
         midiIn.setMidiCallback(this::onMidi);
-        noteInput.setShouldConsumeEvents(false);
-        noteInput.setUseExpressiveMidi(true, 0, 24);
+        //noteInput.setShouldConsumeEvents(false);
+        //noteInput.setUseExpressiveMidi(true, 0, 24);
 
         mModes = new ArrayList<>();
+        mModes.add(new ClipMode());
         mModes.add(new MixerMode());
         mModes.add(new PaintMode());
+        mModes.add(new DrumSequencerMode());
 
         host.scheduleTask(this::initPhase1, 100);
 
@@ -38,7 +43,7 @@ public class LinnStrumentExtension extends ControllerExtension
         }
     }
 
-    private void selectMode(Mode mode)
+    private void selectMode(Mode mode, boolean isUserAction)
     {
         if (mode == mCurrentMode) return;
 
@@ -52,6 +57,27 @@ public class LinnStrumentExtension extends ControllerExtension
         if (mode != null)
         {
             mode.show();
+
+            if (isUserAction)
+            {
+                getHost().showPopupNotification("Mode: " + mode.getLabel());
+            }
+        }
+
+        updateModeButtonLEDs();
+    }
+
+    private void updateModeButtonLEDs()
+    {
+        for(int y=0; y<8; y++)
+        {
+            mDisplay.setColor(-1, y, Color.OFF);
+        }
+
+        if (mCurrentMode != null)
+        {
+            int index = mModes.indexOf(mCurrentMode);
+            mDisplay.setColor(-1, index, mCurrentMode.getModeButtonColor());
         }
     }
 
@@ -69,12 +95,18 @@ public class LinnStrumentExtension extends ControllerExtension
 
         setUserFirmwareMode(true);
 
+        for (int c=0; c<8; c++)
+        {
+            final int status = 0xB0 | c;
+            getMidiOutPort(0).sendMidi(status, 11, 1);      // enable Y-axis data
+        }
+
         drawBitwigLogo();
 
         getHost().scheduleTask(() ->
         {
-            selectMode(mModes.get(1));
-        }, 2000);
+            selectMode(mModes.get(1), false);
+        }, 500);
 
         //getHost().scheduleTask(this::onTimer, 2000);
     }
@@ -97,14 +129,30 @@ public class LinnStrumentExtension extends ControllerExtension
     {
         getHost().println(Integer.toHexString(status << 16 | data1 << 8 | data2) + " (" + data1 + "," + data2 + ")");
 
-        int y = status & 0xf;
-        int x = data1;
+        int y = 7 - (status & 0xf);
+        int x = data1 - 1;
 
-        if (data2 > 0)
+        final ShortMidiMessage shortMidiMessage = new ShortMidiMessage(status, data1, data2);
+
+        if (shortMidiMessage.isNoteOn())
         {
-            if (mCurrentMode != null)
+            if (x == -1)
             {
-                mCurrentMode.onTap(x - 1, 7 - y, data2);
+                if (y < mModes.size())
+                {
+                    selectMode(mModes.get(y), true);
+                }
+            }
+            else if (mCurrentMode != null)
+            {
+                mCurrentMode.onTap(x, y, data2);
+            }
+        }
+        else if (shortMidiMessage.isControlChange())
+        {
+            if (mCurrentMode != null && data1 >= 64 && data1 < 90)
+            {
+                mCurrentMode.onSlideY(data1 - 65, y, 127 - data2);
             }
         }
     }

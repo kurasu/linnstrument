@@ -10,7 +10,6 @@ import java.util.Arrays;
 
 public class PaintMode implements Mode
 {
-
     private SettableStringValue mDocumentData;
 
     @Override
@@ -57,13 +56,22 @@ public class PaintMode implements Mode
         {
             mColor = colorPalette(y).get();
         }
+        else if (isSplit() && x == 24)
+        {
+            mColorR = colorPalette(y).get();
+        }
         else
         {
             final int index = getIndex(x, y);
-            mData[index] = mColor;
+            mData[index] = x > 12 ? mColorR : mColor;
 
             updateDocumentState();
         }
+    }
+
+    private boolean isSplit()
+    {
+        return false;
     }
 
     private void updateDocumentState()
@@ -84,9 +92,16 @@ public class PaintMode implements Mode
         for (int y = 0; y < 8; y++)
         {
             display.setColor(0, y, colorPalette(y));
+
+            if (isSplit())
+            {
+                display.setColor(24, y, colorPalette(y));
+            }
         }
 
-        for (int x = 1; x < 25; x++)
+        final int N = isSplit() ? 24 : 25;
+
+        for (int x = 1; x < N; x++)
         {
             for (int y = 0; y < 8; y++)
             {
@@ -95,11 +110,17 @@ public class PaintMode implements Mode
         }
     }
 
+    @Override
+    public String getLabel()
+    {
+        return "Paint";
+    }
+
     private Color colorPalette(int index)
     {
         final Color[] PALETTE = {
-                Color.BLACK, Color.RED, Color.YELLOW, Color.GREEN,
-                Color.CYAN, Color.BLUE, Color.MAGENTA, Color.WHITE};
+                Color.BLACK, Color.RED, Color.LIME, Color.PINK,
+                Color.CYAN, Color.BLUE, Color.MAGENTA, Color.ORANGE};
 
         return PALETTE[index];
     }
@@ -113,5 +134,6 @@ public class PaintMode implements Mode
     final static int HEIGHT = 8;
 
     byte mColor = 1;
-    byte[] mData = new byte[25 * HEIGHT];
+    byte mColorR = 1;
+    byte[] mData = new byte[WIDTH * HEIGHT];
 }

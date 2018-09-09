@@ -26,5 +26,17 @@ public interface Mode
 
     void onTap(final int x, final int y, int velocity);
 
+    default void onSlideY(final int x, final int y, int subY)
+    {
+
+    }
+
     void paint(final Display display);
+
+    String getLabel();
+
+    default Color getModeButtonColor()
+    {
+        return Color.GREEN;
+    }
 }
