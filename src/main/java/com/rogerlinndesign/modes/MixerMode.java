@@ -1,31 +1,17 @@
 package com.rogerlinndesign.modes;
 
 import com.bitwig.extension.controller.api.ControllerHost;
-import com.bitwig.extension.controller.api.MasterTrack;
 import com.bitwig.extension.controller.api.Track;
-import com.bitwig.extension.controller.api.TrackBank;
 import com.rogerlinndesign.Color;
 import com.rogerlinndesign.Display;
-import com.rogerlinndesign.Mode;
 
-import java.util.Arrays;
-import java.util.function.BiConsumer;
-
-public class MixerMode implements Mode
+public class MixerMode extends AbstractTrackMode
 {
-    private MasterTrack mMasterTrack;
-    private TrackBank mFXTracks;
-    private TrackBank mMainTracks;
-
-    private final static int MAIN_TRACKS = 20;
-    private final static int FX_TRACKS = 4;
 
     @Override
     public void init(ControllerHost host)
     {
-        mMainTracks = host.createMainTrackBank(MAIN_TRACKS, 0, 0);
-        mFXTracks = host.createEffectTrackBank(FX_TRACKS, 0);
-        mMasterTrack = host.createMasterTrack(0);
+        super.init(host);
 
         visitTracks((x, t) ->
         {
@@ -35,35 +21,19 @@ public class MixerMode implements Mode
             t.solo().markInterested();
             t.arm().markInterested();
             t.volume().markInterested();
-            t.addVuMeterObserver(8, -1, false, v -> onVu(x, v));
-            t.color().addValueObserver((r,g,b) -> onColor(x, r, g, b));
+            t.addVuMeterObserver(8, -1, false, v -> onTrackVu(x, v));
+            t.color().addValueObserver((r,g,b) -> onTrackColor(x, r, g, b));
         });
     }
 
-    private void onColor(Integer x, float r, float g, float b)
+    private void onTrackColor(Integer x, float r, float g, float b)
     {
         mColor[x] = Color.closestFromRgb(r, g, b);
     }
 
-    private void onVu(int x, int v)
+    private void onTrackVu(int x, int v)
     {
         mVuMeters[x] = v;
-    }
-
-    private void visitTracks(BiConsumer<Integer, Track> trackConsumer)
-    {
-        for(int t = 0; t< MAIN_TRACKS; t++)
-        {
-            trackConsumer.accept(t, mMainTracks.getItemAt(t));
-        }
-
-        for(int t = 0; t< FX_TRACKS; t++)
-        {
-            trackConsumer.accept(MAIN_TRACKS + t, mFXTracks.getItemAt(t));
-        }
-
-        trackConsumer.accept(MAIN_TRACKS + FX_TRACKS, mMasterTrack);
-
     }
 
     @Override
@@ -108,20 +78,6 @@ public class MixerMode implements Mode
                 track.volume().set(level, 5 << 7);
             }
         }
-    }
-
-    private Track trackFromX(int x)
-    {
-        if (x < MAIN_TRACKS)
-        {
-            return mMainTracks.getItemAt(x);
-        }
-        else if (x < MAIN_TRACKS + FX_TRACKS)
-        {
-            return mFXTracks.getItemAt(x - MAIN_TRACKS);
-        }
-
-        return mMasterTrack;
     }
 
     @Override

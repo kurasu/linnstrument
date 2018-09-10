@@ -108,7 +108,19 @@ public class LinnStrumentExtension extends ControllerExtension
             selectMode(mModes.get(1), false);
         }, 500);
 
-        //getHost().scheduleTask(this::onTimer, 2000);
+        getHost().scheduleTask(this::onTimer, 2000);
+    }
+
+    int mCount;
+    boolean mBlink;
+
+    private void onTimer()
+    {
+        mCount++;
+
+        mBlink = !mBlink;
+
+        getHost().scheduleTask(this::onTimer, 250);
     }
 
     private void drawBitwigLogo()
@@ -160,31 +172,6 @@ public class LinnStrumentExtension extends ControllerExtension
     private void setUserFirmwareMode(boolean b)
     {
         sendNRPN(0, 245, b ? 1 : 0);
-    }
-
-    int mCount;
-
-    private void onTimer()
-    {
-        int color = 1 + (mCount % 10);
-        int row = (mCount % 8);
-
-        for (int y = 0; y < 8; y++)
-        {
-            mDisplay.setColor(-1, y, y == row ? color : 0);
-        }
-
-        for (int x = 0; x < 25; x++)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                mDisplay.setColor(x, y, color);
-            }
-        }
-
-        mCount++;
-
-        getHost().scheduleTask(this::onTimer, 500);
     }
 
     void sendRPN(int channel, int rpn, int value)
