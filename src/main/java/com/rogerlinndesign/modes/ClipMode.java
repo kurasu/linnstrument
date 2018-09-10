@@ -38,8 +38,9 @@ public class ClipMode extends AbstractTrackMode
         return trackIndex + slotIndex * getNumTracks();
     }
 
-    private void updateHasContent(int trackIndex, int slotIndex, boolean content)
+    private void updateHasContent(int trackIndex, int slotIndex, boolean hasContent)
     {
+        mClipHasContent[toClipIndex(trackIndex, slotIndex)] = hasContent;
     }
 
     @Override
@@ -76,10 +77,15 @@ public class ClipMode extends AbstractTrackMode
         {
             for(int s=0; s<getNumScenes(); s++)
             {
-                final Color color = mClipColors[toClipIndex(x, s)];
+                final int clipIndex = toClipIndex(x, s);
 
-                if (color != null)
-                    display.setColor(x, s, color);
+                if (mClipHasContent[clipIndex])
+                {
+                    final Color color = mClipColors[clipIndex];
+
+                    if (color != null)
+                        display.setColor(x, s, color);
+                }
             }
         }
     }
@@ -91,4 +97,5 @@ public class ClipMode extends AbstractTrackMode
     }
 
     private Color[] mClipColors = new Color[getNumTracks() * getNumScenes()];
+    private boolean[] mClipHasContent = new boolean[getNumTracks() * getNumScenes()];
 }
